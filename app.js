@@ -18,7 +18,6 @@ function onConnected(socket) {
 
     //joined
     socket.on('joined', (joined) => {
-        console.log(socket.id);
         socketsConnected.add(socket.id)
         people = {
             id:socket.id,
@@ -26,16 +25,17 @@ function onConnected(socket) {
         }
         //to emit an event to client side when the socket is connected
         io.emit('clients-total', socketsConnected.size)
-        io.emit('yesjoined', arr);
         //  people[socket.id] = joined.name;
         arr.push(people);
     })
-
+    io.emit('yesJoined', arr);
+    
 
     socket.on('disconnect', () => {
-        socketsConnected.delete(socket.id)
+        io.emit('yesDisconnect', socket.id);
         delete arr[socket.id];
-        io.emit('clients-total', socketsConnected.size)
+        socketsConnected.delete(socket.id)
+        io.emit('clients-total', socketsConnected.size);
     });
 
     //handling hellomessage event from client side
