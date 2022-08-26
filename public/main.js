@@ -6,6 +6,7 @@ const messageForm = document.getElementById('message-form');
 const messageInput = document.getElementById('message-input');
 const messageTone = new Audio('./notify.mp3');
 const lobby = document.getElementById('lobbyusers');
+const lists = document.getElementsByTagName('li');
 
 messageForm.addEventListener('submit', (e) => {
     e.preventDefault(); //to avoid page reloading
@@ -16,36 +17,69 @@ socket.on('clients-total', (data) => {
     clientsTotal.innerText = `Total Clients: ${data}`;
 })
 
-
+//send user name
 var joined = {
     name: nameInput.value
 }
 socket.emit('joined', joined);
 
+//joined || left
+socket.on('user-connect', (user) => {
+    userjoinleft(user, 'joined');   //callback
+})
+function userjoinleft(user, status) {
+    const element = `<li class="message-feedback">
+    <p class="feedback text-xs text-center italic " id="feedback">
+        ${user} ${status}
+    </p>
+ </li>`
+    messageContainer.innerHTML += element;
+}
+
+socket.on('user-disconnect', (user) => {
+    userjoinleft(user, 'left');   //callback
+})
+function userjoinleft(user, status) {
+    const element = `<li class="message-feedback">
+    <p class="feedback text-xs text-center italic " id="feedback">
+        ${user} ${status}
+    </p>
+ </li>`
+    messageContainer.innerHTML += element;
+}
+
 //on connect
+let listID = null;
 socket.on('yesJoined', (data) => {
-    for(let names of data){
-    const element = `<a
-    class="flex items-center px-3 py-2 text-sm transition duration-150 ease-in-out border-b border-gray-300 cursor-pointer hover:bg-gray-100 focus:outline-none" id="${names.id}">
-    <img class="object-cover w-10 h-10 rounded-full"
-        src="https://cdn.pixabay.com/photo/2018/09/12/12/14/man-3672010__340.jpg"
-        alt="username" />
-    <div class="w-full pb-2">
-        <div class="flex justify-between">
-            <span class="block ml-2 font-semibold text-gray-600">${names.username}</span>
-            <span class="block ml-2 text-sm text-gray-600">${names.id} </span>
-        </div>
+    for (let list of lists) {
+        listID = list.childNodes[1].id;
+        console.log(listID)
+    }
+    for (let names of data) {
+        if (names.id !== listID || listID == undefined) {
+            const element = `<a class="flex items-center px-3 py-2 text-sm transition duration-150 ease-in-out border-b border-gray-300  cursor-pointer hover:bg-gray-100 focus:outline-none"
+id="${names.id}">
+<img class="object-cover w-10 h-10 rounded-full"
+    src="https://cdn.pixabay.com/photo/2018/09/12/12/14/man-3672010__340.jpg" alt="username" />
+<div class="w-full pb-2">
+    <div class="flex justify-between">
+        <span class="block ml-2 font-semibold text-gray-600">${names.username}</span>
+        <span class="block ml-2 text-sm text-gray-600">${names.id} </span>
     </div>
-    </a>`
-    lobby.innerHTML += element;
+</div>
+</a>`
+            lobby.innerHTML += element;
+        }
     }
 })
 
 //on disconnect
 socket.on('yesDisconnect', (disconnect) => {
-    console.log(disconnect)
     document.getElementById(`${disconnect}`).remove();
 })
+
+//update lobby sidebar
+socket.on()
 
 //sending data object to server where we broadcast to all -----------------------------------
 function sendMessage() {
